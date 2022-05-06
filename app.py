@@ -11,7 +11,7 @@ import datetime
 # from .db_config import DB_CONFIG
 
 app = Flask(__name__)
-DB_CONFIG = 'mysql+pymysql://root:a13b14c15@127.0.0.1:3306/exchange'
+# DB_CONFIG =
 app.config['SQLALCHEMY_DATABASE_URI'] = DB_CONFIG
 CORS(app)
 ma = Marshmallow(app)
