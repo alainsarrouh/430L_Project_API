@@ -180,7 +180,7 @@ def getTransactionsByDate():
         avg_for_this_date = 0
         number_of_transactions_for_this_date = 0
         for transaction in usdToLbpTransactions:
-            if (transaction.added_date>day and transaction.added_date<day+datetime.timedelta(days=1)):
+            if (transaction.added_date>=day and transaction.added_date<=day+datetime.timedelta(days=1)):
                 avg_for_this_date += transaction.lbp_amount/transaction.usd_amount
                 number_of_transactions_for_this_date += 1
         if number_of_transactions_for_this_date != 0:
@@ -194,7 +194,7 @@ def getTransactionsByDate():
         avg_for_this_date = 0
         number_of_transactions_for_this_date = 0
         for transaction in lbpToUsdTransactions:
-            if (transaction.added_date>day and transaction.added_date<day+datetime.timedelta(days=1)):
+            if (transaction.added_date>=day and transaction.added_date<=day+datetime.timedelta(days=1)):
                 avg_for_this_date += transaction.lbp_amount/transaction.usd_amount
                 number_of_transactions_for_this_date += 1
         if number_of_transactions_for_this_date != 0:
