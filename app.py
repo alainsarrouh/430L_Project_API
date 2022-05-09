@@ -334,6 +334,83 @@ def trade():
     db.session.commit()
     return jsonify("Success")
 
+#Compares a hypotehtical transaction done at the current date vs a chosen date
+#Needs chosen DateTime
+#Needs value in transaction
+#needs usd_to_lbp boolean
+@app.route('/insight', methods=['GET'])
+def compareRate():
+    endDate = datetime.datetime.now()
+    startDate = datetime.datetime.now() - datetime.timedelta(days=3)
+
+    data = request.get_json(force=True)
+    if (data["usd_to_lbp"]):
+        usd_to_lbp_transactions = Transaction.query.filter(Transaction.added_date.between(parser.parse(data["date_to_compare"]) - datetime.timedelta(days=3),parser.parse(data["date_to_compare"])),Transaction.usd_to_lbp == 1).all()
+        usd_to_lbp_avg = 0
+        for t in usd_to_lbp_transactions:
+            ratio = t.lbp_amount / t.usd_amount
+            usd_to_lbp_avg += ratio
+        if (len(usd_to_lbp_transactions) != 0):
+            usd_to_lbp_avg = usd_to_lbp_avg/len(usd_to_lbp_transactions)
+        else:
+            abort(403)
+            
+            
+
+        usd_to_lbp_transactionscurrent = Transaction.query.filter(Transaction.added_date.between(startDate,endDate),Transaction.usd_to_lbp == 1).all()
+        usd_to_lbp_avg2 = 0
+        for t in usd_to_lbp_transactionscurrent:
+            ratio = t.lbp_amount / t.usd_amount
+            print(ratio)
+            usd_to_lbp_avg2 += ratio
+        if (len(usd_to_lbp_transactionscurrent) != 0):
+            usd_to_lbp_avg2 = usd_to_lbp_avg2/len(usd_to_lbp_transactions)
+        else:
+            abort(403)
+        
+        change = (data["value"] * usd_to_lbp_avg) -(data["value"] * usd_to_lbp_avg2)
+        if (change <0):
+            return jsonify({
+        "loss" : True,
+        "value" : -change    })
+
+        elif (change >0):
+            return jsonify({
+        "loss" : False,
+        "value" : change    })
+
+    else:
+            lbp_to_usd_transactions = Transaction.query.filter(Transaction.added_date.between(parser.parse(data["date_to_compare"]) - datetime.timedelta(days=3),parser.parse(data["date_to_compare"])),Transaction.usd_to_lbp == 0).all() 
+            lbp_to_usd_avg = 0
+            for t in lbp_to_usd_transactions:
+                ratio = t.lbp_amount / t.usd_amount
+                lbp_to_usd_avg += ratio
+            if (len(lbp_to_usd_transactions) != 0):
+                lbp_to_usd_avg = lbp_to_usd_avg/len(lbp_to_usd_transactions)
+            else:
+                abort(403)
+           
+            lbp_to_usd_transactionscurrent = Transaction.query.filter(Transaction.added_date.between(startDate,endDate),Transaction.usd_to_lbp == 0).all()
+            lbp_to_usd_avg2 = 0
+            for t in lbp_to_usd_transactionscurrent:
+                ratio = t.lbp_amount / t.usd_amount
+                lbp_to_usd_avg2 += ratio
+            if (len(lbp_to_usd_transactionscurrent) != 0):
+                lbp_to_usd_avg2 = lbp_to_usd_avg2/len(lbp_to_usd_transactionscurrent)
+            else:
+                abort(403)
+
+            change = (data["value"]%lbp_to_usd_avg) -(data["value"]%lbp_to_usd_avg2)
+            if (change <0):
+                return jsonify({
+            "loss" : True,
+            "value" : -change    })
+
+            elif (change >=0):
+                return jsonify({
+            "loss" : False,
+            "value" : change    })
+
 def create_token(user_id):
     payload = {
         'exp': datetime.datetime.utcnow() + datetime.timedelta(days=4),
