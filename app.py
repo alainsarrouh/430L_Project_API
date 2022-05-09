@@ -99,8 +99,9 @@ def rate():
 #Compares a hypotehtical transaction done at the current date vs a chosen date
 #Needs chosen DateTime
 #Needs value in transaction
-#needs usd_to_lbp boolean
-@app.route('/insight', methods=['GET'])
+# usd_to_lbp boolean
+# dollars to buy if choosing to compare buying dollars vs spending money
+@app.route('/insight', methods=['POST'])
 def compareRate():
     endDate = datetime.datetime.now()
     startDate = datetime.datetime.now() - datetime.timedelta(days=3)
@@ -158,23 +159,11 @@ def compareRate():
                     change = (data["value"]%lbp_to_usd_avg) -(data["value"]%lbp_to_usd_avg2)
                     return returnchange(change)
                 else:
-                    diff = math.floor(data["value"]/lbp_to_usd_avg) - math.floor(data["value"]/lbp_to_usd_avg2)
-                    usd_to_lbp_transactionscurrent = Transaction.query.filter(Transaction.added_date.between(startDate,endDate),Transaction.usd_to_lbp == 1).all()
-                    usd_to_lbp_avg2 = 0
-                    for t in usd_to_lbp_transactionscurrent:
-                        ratio = t.lbp_amount / t.usd_amount
-                        print(ratio)
-                        usd_to_lbp_avg2 += ratio
-                    if (len(usd_to_lbp_transactionscurrent) != 0):
-                        usd_to_lbp_avg2 = usd_to_lbp_avg2/len(usd_to_lbp_transactions)
-                        return returnchange(diff * usd_to_lbp_avg2)
-
-                    else:
-                        abort(403)
+                    diff = math.floor(data["value"]/lbp_to_usd_avg2) - math.floor(data["value"]/lbp_to_usd_avg)
+                    return returnchange(diff)
             else:
                 diff = (data["dollarstobuy"] *lbp_to_usd_avg2) - (data["dollarstobuy"]*lbp_to_usd_avg)
                 return returnchange(diff)
-
 
 #Fetches the average of each each whether it is lbp to usd or usd to lbp
 #Needs no data
