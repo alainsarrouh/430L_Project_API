@@ -174,6 +174,7 @@ def getTransactionsByDate():
     days1 = [datetime.datetime.strptime(str(transaction.added_date.year)+"-"+str(transaction.added_date.month)+"-"+str(transaction.added_date.day),"%Y-%m-%d") for transaction in usdToLbpTransactions]
     days2 = [datetime.datetime.strptime(str(transaction.added_date.year)+"-"+str(transaction.added_date.month)+"-"+str(transaction.added_date.day),"%Y-%m-%d") for transaction in lbpToUsdTransactions]
     days = set(sorted(days1+days2))
+    days = sorted([day for day in days])
 
     avg_by_date = []
     for day in days:
@@ -201,13 +202,14 @@ def getTransactionsByDate():
             avg_by_date.append(avg_for_this_date/number_of_transactions_for_this_date)
         else:
             avg_by_date.append(0)
-    days = [str(day.year)+"-"+str(day.month)+"-"+str(day.day) for day in days]
     lbpToUsdAveragesByDate = avg_by_date
     
+    days = [str(day.year)+"-"+str(day.month)+"-"+str(day.day) for day in days]
+    
     return jsonify({
-        "dates": days[::-1],
-        "usdToLbpAverageByDate": usdToLbpAverageByDate[::-1],
-        "lbpToUsdAveragesByDate": lbpToUsdAveragesByDate[::-1]
+        "dates": days,
+        "usdToLbpAverageByDate": usdToLbpAverageByDate,
+        "lbpToUsdAveragesByDate": lbpToUsdAveragesByDate
     })
 
 #Adds a new user to the database
