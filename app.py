@@ -1,26 +1,28 @@
-from flask import Flask
-from flask import request
-from flask import jsonify
-from flask import abort
+from urllib import request
+from .db_config import DB_CONFIG
+from flask import Flask, request, jsonify, abort
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.sql import func
 from flask_cors import CORS
 from flask_marshmallow import Marshmallow
 from flask_bcrypt import Bcrypt
 import jwt
 import datetime
-# from .db_config import DB_CONFIG
+
+
 
 app = Flask(__name__)
-# DB_CONFIG =
-app.config['SQLALCHEMY_DATABASE_URI'] = DB_CONFIG
+app.config[
+    'SQLALCHEMY_DATABASE_URI'] = DB_CONFIG
 CORS(app)
-ma = Marshmallow(app)
 db = SQLAlchemy(app)
+ma = Marshmallow(app)
 bcrypt = Bcrypt(app)
-SECRET_KEY = "b'|\xe7\xbfU3`\xc4\xec\xa7\xa9zf:}\xb5\xc7\xb9\x139^3@Dv'"
-# from .model.user import User, user_schema
-# from .model.transaction import Transaction, transaction_schema, transactions_schema
 
+from .model.user import User, user_schema, users_schema
+from .model.transaction import Transaction, transaction_schema,transactions_schema
+from .model.request import Request, request_schema,requests_schema
+SECRET_KEY = "b'|\xe7\xbfU3`\xc4\xec\xa7\xa9zf:}\xb5\xc7\xb9\x139^3@Dv'"
 #Adds a transaction to the database
 #Needs:
 #   Authorization (optional)
@@ -286,8 +288,8 @@ def getAllRequestsOfAUser():
 #   id
 @app.route('/request', methods=["DELETE"])
 def deleteRequest():
-    data = request.get_json(force=True)
-    Request.query.filter_by(id=data["id"]).delete()
+    id = request.args.get('id')
+    Request.query.filter_by(id=id).delete()
     db.session.commit()
     return jsonify("Success")
     
@@ -310,6 +312,7 @@ def trade():
     user = User.query.filter_by(id=int(rqst.user_id)).first()
     otherUser = User.query.filter_by(id=int(rqst.other_user_id)).first()
     if (bool(rqst.usd_to_lbp)):
+        
         if (int(rqst.usd_amount) > user.usd_wallet or int(rqst.lbp_amount) > otherUser.lbp_wallet):
             db.session.commit()
             Request.query.filter_by(id=int(data["id"])).delete()
@@ -353,76 +356,3 @@ def extract_auth_token(authenticated_request):
 def decode_token(token):
     payload = jwt.decode(token, SECRET_KEY, 'HS256')
     return payload['sub']
-
-class User(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    user_name = db.Column(db.String(30), unique=True)
-    hashed_password = db.Column(db.String(128))
-    lbp_wallet = db.Column(db.Integer)
-    usd_wallet = db.Column(db.Integer)
-
-    def __init__(self, user_name, password):
-        super(User, self).__init__(user_name=user_name)
-        self.hashed_password = bcrypt.generate_password_hash(password)
-        self.lbp_wallet = 0
-        self.usd_wallet = 0
-
-class UserSchema(ma.Schema):
-    class Meta:
-        fields = ("id", "user_name", "lbp_wallet","usd_wallet")
-        model = User
-
-user_schema = UserSchema()
-users_schema = UserSchema(many=True)
-
-class Transaction(db.Model):
-    id = db.Column(db.Integer, primary_key = True)
-    usd_amount = db.Column(db.Float)
-    lbp_amount = db.Column(db.Float)
-    usd_to_lbp = db.Column(db.Boolean)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
-    added_date = db.Column(db.DateTime)
-
-    def __init__(self, usd_amount, lbp_amount, usd_to_lbp, user_id):
-        super(Transaction, self).__init__(
-            usd_amount=usd_amount,
-            lbp_amount=lbp_amount, 
-            usd_to_lbp=usd_to_lbp,
-            user_id=user_id,
-            added_date=datetime.datetime.now()
-        )
-
-class TransactionSchema(ma.Schema):
-    class Meta:
-        fields = ("id", "usd_amount", "lbp_amount", "usd_to_lbp", "user_id", "added_date")
-        model = Transaction
-
-transaction_schema = TransactionSchema()
-transactions_schema = TransactionSchema(many=True)
-
-class Request(db.Model):
-    id = db.Column(db.Integer, primary_key = True)
-    usd_amount = db.Column(db.Float)
-    lbp_amount = db.Column(db.Float)
-    usd_to_lbp = db.Column(db.Boolean)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    other_user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    added_date = db.Column(db.DateTime)
-
-    def __init__(self, usd_amount, lbp_amount, usd_to_lbp, user_id, other_user_id):
-        super(Request, self).__init__(
-            usd_amount=usd_amount,
-            lbp_amount=lbp_amount, 
-            usd_to_lbp=usd_to_lbp,
-            user_id=user_id,
-            other_user_id=other_user_id,
-            added_date=datetime.datetime.now()
-        )
-
-class RequestSchema(ma.Schema):
-    class Meta:
-        fields = ("id", "usd_amount", "lbp_amount", "usd_to_lbp", "user_id", "other_user_id", "added_date")
-        model = Request
-
-request_schema = RequestSchema()
-requests_schema = RequestSchema(many=True)
