@@ -404,6 +404,13 @@ def trade():
         user.lbp_wallet -= int(rqst.lbp_amount)
         otherUser.lbp_wallet += int(rqst.lbp_amount)
     Request.query.filter_by(id=int(data["id"])).delete()
+    trsction = Transaction(
+        usd_amount = float(rqst.usd_amount), 
+        lbp_amount = float(rqst.lbp_amount), 
+        usd_to_lbp = int(rqst.usd_to_lbp),
+        user_id = rqst.user_id
+    )
+    db.session.add(trsction)
     db.session.commit()
     return jsonify("Success")
 
